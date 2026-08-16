@@ -29,6 +29,7 @@ class PetSettings:
     speed_multiplier: float = 1.0
     show_hud: bool = True
     is_wandering: bool = True
+    is_bass_playing: bool = False  # Continuous Bass Playing Mode
     autostart: bool = False
     theme: str = 'dark'            # UI Theme: 'dark' or 'light'
     pos_x: float = 0.0
@@ -74,6 +75,8 @@ class SettingsManager:
                         settings.show_hud = bool(data['show_hud'])
                     if 'is_wandering' in data:
                         settings.is_wandering = bool(data['is_wandering'])
+                    if 'is_bass_playing' in data:
+                        settings.is_bass_playing = bool(data['is_bass_playing'])
                     if 'autostart' in data:
                         settings.autostart = bool(data['autostart'])
                     else:
@@ -103,6 +106,7 @@ class SettingsManager:
             'speed_multiplier': settings.speed_multiplier,
             'show_hud': settings.show_hud,
             'is_wandering': settings.is_wandering,
+            'is_bass_playing': settings.is_bass_playing,
             'autostart': settings.autostart,
             'theme': settings.theme,
             'pos_x': int(settings.pos_x),

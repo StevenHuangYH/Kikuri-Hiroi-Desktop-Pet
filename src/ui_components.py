@@ -796,6 +796,11 @@ class ContextMenu:
             checked=self.pet.settings.is_wandering,
         )
         self.root_menu.add_command(
+            label=m['bass_playing'],
+            command=self.pet.toggle_bass_playing,
+            checked=self.pet.settings.is_bass_playing,
+        )
+        self.root_menu.add_command(
             label=m['autostart'],
             command=self.pet.toggle_autostart,
             checked=self.pet.settings.autostart,

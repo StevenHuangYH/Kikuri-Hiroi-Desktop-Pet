@@ -265,15 +265,31 @@ class KikuriDesktopPet:
         self.save_settings()
 
     def toggle_wander(self) -> None:
-        """Toggle autonomous roaming mode."""
+        """Toggle autonomous roaming mode with mutual exclusivity against bass playing."""
         self.settings.is_wandering = not self.settings.is_wandering
-        self.context_menu.rebuild_menu()
         t = I18N[self.settings.language]
         if self.settings.is_wandering:
+            self.settings.is_bass_playing = False
             self.show_speech(t['roam_on'])
         else:
             self.show_speech(t['roam_off'])
             self.set_state('idle')
+        self.context_menu.rebuild_menu()
+        self.save_settings()
+
+    def toggle_bass_playing(self) -> None:
+        """Toggle continuous bass playing mode with mutual exclusivity against auto-roam."""
+        self.settings.is_bass_playing = not self.settings.is_bass_playing
+        t = I18N[self.settings.language]
+        if self.settings.is_bass_playing:
+            self.settings.is_wandering = False
+            self.set_state('playing')
+            self.show_speech(t['bass_on'], duration_ms=4000)
+        else:
+            if self.current_state == 'playing':
+                self.set_state('idle')
+            self.show_speech(t['bass_off'], duration_ms=2500)
+        self.context_menu.rebuild_menu()
         self.save_settings()
 
     def toggle_autostart(self) -> None:
@@ -294,7 +310,14 @@ class KikuriDesktopPet:
             self.current_state = state
             self.current_frame = 0
         if manual:
-            self.settings.is_wandering = False
+            if state == 'playing':
+                self.settings.is_bass_playing = True
+                self.settings.is_wandering = False
+            else:
+                self.settings.is_bass_playing = False
+                self.settings.is_wandering = False
+            self.context_menu.rebuild_menu()
+            self.save_settings()
 
     def animate_step(self) -> None:
         """Render next frame and schedule subsequent step."""
@@ -317,7 +340,7 @@ class KikuriDesktopPet:
 
     def roam_decision_step(self) -> None:
         """Autonomous roaming / wander decision engine."""
-        if self.settings.is_wandering and not self.is_dragging:
+        if self.settings.is_wandering and not self.settings.is_bass_playing and not self.is_dragging:
             screen_w = self.root.winfo_screenwidth()
             min_x = 20
             max_x = screen_w - self.settings.cell_w - 20
@@ -374,6 +397,11 @@ class KikuriDesktopPet:
         now = time.time()
 
         # 1. Background Music / Audio Playback Reaction
+        if self.settings.is_bass_playing:
+            if self.current_state != 'playing' and not self.is_dragging:
+                self.set_state('playing')
+            return
+
         if self.is_audio_playing:
             self.last_audio_active_time = now
             if not self.is_dragging and self.current_state != 'playing':
