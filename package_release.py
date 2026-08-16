@@ -1,0 +1,113 @@
+import os
+import shutil
+import zipfile
+from pathlib import Path
+
+BASE_DIR = Path('.').resolve()
+RELEASE_DIR = BASE_DIR / 'release'
+RELEASE_PKG_DIR = RELEASE_DIR / 'KikuriHiroiDesktopPet_v1.0'
+
+if RELEASE_DIR.exists():
+    shutil.rmtree(RELEASE_DIR)
+RELEASE_PKG_DIR.mkdir(parents=True, exist_ok=True)
+
+# 1. Copy standalone exe
+src_exe = BASE_DIR / 'dist' / 'KikuriHiroiDesktopPet.exe'
+dst_exe = RELEASE_PKG_DIR / 'KikuriHiroiDesktopPet.exe'
+if src_exe.is_file():
+    shutil.copy2(src_exe, dst_exe)
+    shutil.copy2(src_exe, RELEASE_DIR / 'KikuriHiroiDesktopPet.exe')
+
+# 2. Copy pet assets directory
+shutil.copytree(BASE_DIR / 'pet', RELEASE_PKG_DIR / 'pet')
+
+# 3. Create convenient batch launcher
+bat_lines = [
+    '@echo off',
+    'title Kikuri Hiroi Desktop Pet',
+    'cd /d "%~dp0"',
+    'start "" "%~dp0KikuriHiroiDesktopPet.exe"',
+    'exit'
+]
+with open(RELEASE_PKG_DIR / '启动桌宠.bat', 'w', encoding='ansi') as f:
+    f.write('\n'.join(bat_lines))
+
+# 4. Create README.md
+readme_lines = [
+    '# Kikuri Hiroi Desktop Pet (广井菊里桌宠) v1.0 正式发行版',
+    '',
+    '🎸 **SICK HACK 贝斯手 · 广井菊里 桌面宠物** 🎸',
+    '',
+    '---',
+    '',
+    '## ✨ 软件特色 (Features)',
+    '',
+    '1. **实时系统性能监视 (Hardware HUD)**:',
+    '   - 实时监控 CPU、RAM、NVIDIA GPU 占用率与显存。',
+    '   - 高负载状态智能互动（满载狂奔 / 醉酒晕眩）。',
+    '2. **多语言全支持 (Multi-Language)**:',
+    '   - 🇨🇳 中文 (简体) / 🇬🇧 English / 🇯🇵 日本語 一键实时切换。',
+    '3. **丝滑高帧率动画与智能漫游**:',
+    '   - 9 组 108 帧精心调校的丝滑高帧率动画动作（每组动作 12 帧超流畅插帧与物理曲线，涵盖待机、慢步、欢呼、跳跃、眩晕、检查等）。',
+    '   - 自主漫游、自由拖拽、位置记忆与开机自启动。',
+    '4. **8/15 专属生日庆典彩蛋**:',
+    '   - 8月15日特别祝福语音与欢庆动画。',
+    '',
+    '---',
+    '',
+    '## 🚀 使用方法 (How to Use)',
+    '',
+    '- **直接双击运行** KikuriHiroiDesktopPet.exe 即可启动，完全免安装、绿色便携！',
+    '- **鼠标左键按住拖拽**：可自由移动桌宠至屏幕任意位置，松开鼠标后会自动记忆位置并触发互动语音。',
+    '- **鼠标右键点击桌宠**：弹出功能设置菜单：',
+    '  - 🍶 **干杯〜！**：畅饮鬼杀清酒互动。',
+    '  - 🎂 **生日祝福**：触发专属生日祝福彩蛋。',
+    '  - 🎭 **动作切换**：手动播放待机、行走、挥手、跳跃等动作。',
+    '  - 🔍 **宠物大小**：75% (小)、100% (标准)、125% (中)、150% (大)。',
+    '  - ⏱️ **动画速度**：0.7x (悠闲)、1.0x (适中)、1.4x (疾速)。',
+    '  - 🌐 **语言切换**：中文 / English / 日本語。',
+    '  - 📊 **系统监控**：开启/关闭顶部性能监控悬浮条 (CPU/RAM/GPU)。',
+    '  - 🐾 **自由漫游模式**：开启/关闭桌面上慢悠悠闲逛。',
+    '  - 🚀 **开机自启动**：一键开启/关闭随 Windows 开机自动启动。',
+    '  - ❌ **退出**：保存所有个性化设置并退出。',
+    '',
+    '---',
+    '',
+    '## 📦 文件清单 (File Structure)',
+    '',
+    '- KikuriHiroiDesktopPet.exe：独立单文件主程序（已内嵌所有图片素材与程序库，单文件可独立运行）。',
+    '- 启动桌宠.bat：快捷启动脚本。',
+    '- pet/：外部素材与配置文件目录。',
+    '  - settings.json：个人偏好设置与窗口坐标持久化保存文件。',
+    '',
+    '---',
+    '',
+    '## 💻 系统要求 (System Requirements)',
+    '',
+    '- **操作系统**：Windows 10 / Windows 11 (64位)',
+    '- **运行环境**：原生独立可执行文件，无需安装 Python 或任何额外运行库！',
+    '',
+    '---',
+    '© 2026 Kikuri Hiroi Project. All rights reserved.',
+]
+
+with open(RELEASE_PKG_DIR / 'README.md', 'w', encoding='utf-8') as f:
+    f.write('\n'.join(readme_lines))
+
+with open(RELEASE_DIR / 'README.md', 'w', encoding='utf-8') as f:
+    f.write('\n'.join(readme_lines))
+
+# 5. Create ZIP archive
+zip_path = RELEASE_DIR / 'KikuriHiroiDesktopPet_v1.0.zip'
+print('Creating release ZIP archive at:', zip_path)
+with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zf:
+    for root, dirs, files in os.walk(RELEASE_PKG_DIR):
+        for file in files:
+            full_path = Path(root) / file
+            rel_path = full_path.relative_to(RELEASE_PKG_DIR.parent)
+            zf.write(full_path, arcname=rel_path)
+
+print('Release packaging complete!')
+for item in RELEASE_DIR.iterdir():
+    size_str = f'{item.stat().st_size / (1024*1024):.2f} MB' if item.is_file() else '[DIR]'
+    print(f' - {item.name:35} : {size_str}')

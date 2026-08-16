@@ -1,0 +1,10 @@
+{
+  "language": "cn",
+  "scale": 0.75,
+  "speed_multiplier": 1.0,
+  "show_hud": true,
+  "is_wandering": true,
+  "autostart": true,
+  "pos_x": 1717,
+  "pos_y": 158
+}
