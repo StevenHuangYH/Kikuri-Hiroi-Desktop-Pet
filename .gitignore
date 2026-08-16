@@ -27,7 +27,4 @@ Thumbs.db
 SKILL.md
 
 # Tool working directory generated outputs
-run/decoded/
-run/frames/
-run/final/
-run/qa/
+run/
