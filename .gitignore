@@ -22,3 +22,12 @@ env/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Gemini / AGY skills
+SKILL.md
+
+# Tool working directory generated outputs
+run/decoded/
+run/frames/
+run/final/
+run/qa/

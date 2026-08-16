@@ -24,12 +24,13 @@ from src.config import (
 
 @dataclass
 class PetSettings:
-    language: str = 'jp'           # Default language: Japanese
-    scale: float = 1.0
+    language: str = 'cn'           # Default language: Chinese (Simplified)
+    scale: float = 0.75            # Default scale: 75% (Compact)
     speed_multiplier: float = 1.0
     show_hud: bool = True
     is_wandering: bool = True
     autostart: bool = False
+    theme: str = 'dark'            # UI Theme: 'dark' or 'light'
     pos_x: float = 0.0
     pos_y: float = 0.0
 
@@ -77,6 +78,8 @@ class SettingsManager:
                         settings.autostart = bool(data['autostart'])
                     else:
                         settings.autostart = is_autostart_registered()
+                    if 'theme' in data and data['theme'] in ('dark', 'light'):
+                        settings.theme = data['theme']
                     if 'pos_x' in data and 'pos_y' in data:
                         sx, sy = float(data['pos_x']), float(data['pos_y'])
                         if 0 <= sx <= screen_w - 40 and 0 <= sy <= screen_h - 40:
@@ -101,6 +104,7 @@ class SettingsManager:
             'show_hud': settings.show_hud,
             'is_wandering': settings.is_wandering,
             'autostart': settings.autostart,
+            'theme': settings.theme,
             'pos_x': int(settings.pos_x),
             'pos_y': int(settings.pos_y),
         }

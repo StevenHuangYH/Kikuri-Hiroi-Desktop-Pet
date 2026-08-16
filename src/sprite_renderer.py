@@ -9,7 +9,7 @@ defringes background spill, and pre-renders cached PhotoImage frames for Tkinter
 from __future__ import annotations
 
 from pathlib import Path
-from PIL import Image, ImageTk, ImageFilter, ImageEnhance, ImageChops
+from PIL import Image, ImageTk
 
 try:
     import numpy as np

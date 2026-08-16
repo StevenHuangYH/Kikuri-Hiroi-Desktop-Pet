@@ -17,9 +17,9 @@ import numpy as np
 CELL_W = 192
 CELL_H = 208
 ATLAS_COLS = 12
-ATLAS_ROWS = 7
+ATLAS_ROWS = 8
 ATLAS_W = ATLAS_COLS * CELL_W   # 2304
-ATLAS_H = ATLAS_ROWS * CELL_H   # 1456
+ATLAS_H = ATLAS_ROWS * CELL_H   # 1664
 BASELINE_Y = 198
 TARGET_H = 180
 
@@ -31,6 +31,7 @@ ROWS_CONFIG = {
     'jumping':       {'row': 4, 'frames': 12},
     'failed':        {'row': 5, 'frames': 12},
     'waiting':       {'row': 6, 'frames': 12},
+    'playing':       {'row': 7, 'frames': 12},
 }
 
 
@@ -156,9 +157,9 @@ def extract_keyframe_cells(img_path: Path, target_h=TARGET_H) -> list[Image.Imag
     if not boxes:
         return []
 
-    max_h = max(b[3] - b[1] for b in boxes)
-    max_w = max(b[2] - b[0] for b in boxes)
-    baseline_source_y = max(b[3] for b in boxes)
+    max_h = max(int(b[3]) - int(b[1]) for b in boxes)
+    max_w = max(int(b[2]) - int(b[0]) for b in boxes)
+    baseline_source_y = max(int(b[3]) for b in boxes)
     scale = min(target_h / float(max_h), (CELL_W - 16) / float(max_w))
 
     frames = []
@@ -174,7 +175,7 @@ def extract_keyframe_cells(img_path: Path, target_h=TARGET_H) -> list[Image.Imag
         r_arr[r_arr[:, :, 3] == 0] = 0
         resized = Image.fromarray(r_arr, mode='RGBA')
 
-        feet_diff = baseline_source_y - b[3]
+        feet_diff = int(baseline_source_y) - int(b[3])
         pos_y = BASELINE_Y - new_h - int(round(feet_diff * scale))
         pos_x = (CELL_W - new_w) // 2
         pos_x = max(4, min(CELL_W - new_w - 4, pos_x))
@@ -206,12 +207,19 @@ def generate_all_classic_frames(project_dir: Path):
         'jumping':       ('jumping.png',       [4, 4, 1, 0, 0, 0, 2, 3, 4, 4, 1, 1]),
         'failed':        ('failed.png',        [0, 1, 2, 3, 4, 5, 6, 7, 6, 4, 2, 0]),
         'waiting':       ('waiting.png',       [0, 1, 2, 3, 4, 5, 4, 3, 2, 1, 0, 0]),
+        'playing':       ('playing.png',       [0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5]),
     }
 
     for state, (filename, map_12) in state_files.items():
         filepath = decoded_dir / filename
         if filepath.is_file():
-            keyframes = extract_keyframe_cells(filepath, target_h=TARGET_H)
+            im_check = Image.open(filepath)
+            iw, ih = im_check.size
+            if ih == CELL_H and iw % CELL_W == 0:
+                num_cells = iw // CELL_W
+                keyframes = [im_check.crop((i * CELL_W, 0, (i + 1) * CELL_W, CELL_H)) for i in range(num_cells)]
+            else:
+                keyframes = extract_keyframe_cells(filepath, target_h=TARGET_H)
         else:
             keyframes = []
 
@@ -276,5 +284,5 @@ def generate_all_classic_frames(project_dir: Path):
 
 
 if __name__ == '__main__':
-    project_root = Path(__file__).parent.resolve()
+    project_root = Path(__file__).resolve().parent.parent
     generate_all_classic_frames(project_root)

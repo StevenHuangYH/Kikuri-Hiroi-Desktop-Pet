@@ -1,11 +1,15 @@
 # -*- mode: python ; coding: utf-8 -*-
-
+import os
+PROJ_ROOT = os.path.abspath(os.path.join(SPECPATH, '..'))
 
 a = Analysis(
-    ['desktop_pet.py'],
-    pathex=[],
+    [os.path.join(PROJ_ROOT, 'desktop_pet.py')],
+    pathex=[PROJ_ROOT],
     binaries=[],
-    datas=[('pet', 'pet'), ('app_icon.ico', '.')],
+    datas=[
+        (os.path.join(PROJ_ROOT, 'pet'), 'pet'),
+        (os.path.join(PROJ_ROOT, 'app_icon.ico'), '.'),
+    ],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -35,6 +39,6 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    version='version_info.txt',
-    icon=['app_icon.ico'],
+    version=os.path.join(PROJ_ROOT, 'build_config', 'version_info.txt'),
+    icon=[os.path.join(PROJ_ROOT, 'app_icon.ico')],
 )

@@ -97,11 +97,14 @@ class KikuriDesktopPet:
         else:
             self.pet_img_item = None
 
-        # Hardware metrics
+        # Hardware metrics & Audio Playback Tracking
         self.cpu_pct = 0.0
         self.ram_pct = 0.0
         self.gpu_pct = 0.0
         self.last_high_load_state_change = 0.0
+        self.is_audio_playing = False
+        self.last_audio_active_time = 0.0
+        self.last_music_quote_time = 0.0
 
         # Dragging state
         self.drag_start_x = 0.0
@@ -115,11 +118,11 @@ class KikuriDesktopPet:
         self.canvas.bind("<Button-3>", self.show_context_menu)
 
         # UI Components
-        self.hud = HUDWindow(self.root)
+        self.hud = HUDWindow(self.root, theme=self.settings.theme)
         if not self.settings.show_hud:
             self.hud.hide()
 
-        self.bubble = SpeechBubble(self.root)
+        self.bubble = SpeechBubble(self.root, theme=self.settings.theme)
         self.context_menu = ContextMenu(self.root, self)
         self.context_menu.rebuild_menu()
 
@@ -171,6 +174,21 @@ class KikuriDesktopPet:
             self.show_speech(msg.get(lang, "Language updated!"))
             self.save_settings()
 
+    def set_theme(self, theme: str) -> None:
+        """Switch UI theme between dark and light modes."""
+        if theme in ('dark', 'light'):
+            self.settings.theme = theme
+            self.hud.set_theme(theme)
+            self.bubble.set_theme(theme)
+            self.context_menu.rebuild_menu()
+            self.save_settings()
+            feedback = {
+                'cn': f"已切换至 {'深色' if theme == 'dark' else '浅色'} 模式 🎨",
+                'en': f"Switched to {theme.capitalize()} Mode 🎨",
+                'jp': f"{'ダーク' if theme == 'dark' else 'ライト'}モードに切り替えました 🎨",
+            }
+            self.show_speech(feedback.get(self.settings.language, f"Theme: {theme}"), duration_ms=2000)
+
     def set_speed(self, multiplier: float) -> None:
         """Adjust animation playback speed."""
         self.settings.speed_multiplier = multiplier
@@ -220,7 +238,7 @@ class KikuriDesktopPet:
     def show_speech(self, text: str, duration_ms: int = 3500) -> None:
         """Display dialogue bubble near the pet."""
         self.bubble.show_speech(
-            text, self.settings.pos_x, self.settings.pos_y, self.settings.cell_w, duration_ms
+            text, self.settings.pos_x, self.settings.pos_y, self.settings.cell_w, duration_ms, lang=self.settings.language
         )
 
     def show_context_menu(self, event) -> None:
@@ -308,13 +326,15 @@ class KikuriDesktopPet:
 
             # If near target, pick action or pause
             if abs(dist) < 15:
-                choice = datetime.datetime.now().microsecond % 10
-                if choice < 5:
+                choice = datetime.datetime.now().microsecond % 12
+                if choice < 4:
                     self.set_state('idle')
-                elif choice < 7:
+                elif choice < 6:
                     self.set_state('waving')
-                elif choice < 9:
+                elif choice < 8:
                     self.set_state('jumping')
+                elif choice < 10:
+                    self.set_state('playing')
                 else:
                     self.set_state('waiting')
 
@@ -339,18 +359,40 @@ class KikuriDesktopPet:
 
         self.root.after(1000, self.roam_decision_step)
 
-    def on_hardware_stats_updated(self, cpu_pct: float, ram_pct: float, gpu_pct: float) -> None:
+    def on_hardware_stats_updated(self, cpu_pct: float, ram_pct: float, gpu_pct: float, audio_active: bool = False) -> None:
         """Callback from background monitor thread."""
         self.cpu_pct = cpu_pct
         self.ram_pct = ram_pct
         self.gpu_pct = gpu_pct
+        self.is_audio_playing = audio_active
         self.root.after(0, self.update_monitor_ui)
 
     def update_monitor_ui(self) -> None:
-        """Update HUD UI and trigger high-load state changes."""
+        """Update HUD UI and trigger reactive state changes based on audio playback and system load."""
         self.hud.update_metrics(self.cpu_pct, self.ram_pct, self.gpu_pct)
 
         now = time.time()
+
+        # 1. Background Music / Audio Playback Reaction
+        if self.is_audio_playing:
+            self.last_audio_active_time = now
+            if not self.is_dragging and self.current_state != 'playing':
+                self.set_state('playing')
+                if now - self.last_music_quote_time > 45:
+                    self.last_music_quote_time = now
+                    t = I18N[self.settings.language]
+                    music_quotes = [t['quotes'][6], t['quotes'][7], t['quotes'][8], t['quotes'][9]]
+                    self.show_speech(music_quotes[int(now) % len(music_quotes)], duration_ms=4000)
+            return
+
+        # Return to idle after music stops (3.0s grace period)
+        if self.current_state == 'playing' and (now - self.last_audio_active_time > 3.0) and not self.is_dragging:
+            self.set_state('idle')
+            t = I18N[self.settings.language]
+            if len(t['quotes']) > 10:
+                self.show_speech(t['quotes'][10], duration_ms=3500)
+
+        # 2. Hardware High Load Reaction (when not playing music)
         if now - self.last_high_load_state_change > 15 and not self.is_dragging:
             if self.cpu_pct > 80 or self.gpu_pct > 80:
                 self.set_state('jumping')
@@ -375,6 +417,7 @@ class KikuriDesktopPet:
 
     def on_left_down(self, event) -> None:
         """Start dragging."""
+        self.context_menu.close()
         self.is_dragging = True
         self.drag_start_x = event.x_root - self.settings.pos_x
         self.drag_start_y = event.y_root - self.settings.pos_y

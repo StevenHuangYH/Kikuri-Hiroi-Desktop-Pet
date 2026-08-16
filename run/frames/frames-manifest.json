@@ -126,6 +126,24 @@
         "C:\\Users\\steve\\Desktop\\Kikuri Hiroi Desktop Pet\\run\\frames\\waiting\\10.png",
         "C:\\Users\\steve\\Desktop\\Kikuri Hiroi Desktop Pet\\run\\frames\\waiting\\11.png"
       ]
+    },
+    "playing": {
+      "row": 7,
+      "frames_count": 12,
+      "frame_files": [
+        "C:\\Users\\steve\\Desktop\\Kikuri Hiroi Desktop Pet\\run\\frames\\playing\\00.png",
+        "C:\\Users\\steve\\Desktop\\Kikuri Hiroi Desktop Pet\\run\\frames\\playing\\01.png",
+        "C:\\Users\\steve\\Desktop\\Kikuri Hiroi Desktop Pet\\run\\frames\\playing\\02.png",
+        "C:\\Users\\steve\\Desktop\\Kikuri Hiroi Desktop Pet\\run\\frames\\playing\\03.png",
+        "C:\\Users\\steve\\Desktop\\Kikuri Hiroi Desktop Pet\\run\\frames\\playing\\04.png",
+        "C:\\Users\\steve\\Desktop\\Kikuri Hiroi Desktop Pet\\run\\frames\\playing\\05.png",
+        "C:\\Users\\steve\\Desktop\\Kikuri Hiroi Desktop Pet\\run\\frames\\playing\\06.png",
+        "C:\\Users\\steve\\Desktop\\Kikuri Hiroi Desktop Pet\\run\\frames\\playing\\07.png",
+        "C:\\Users\\steve\\Desktop\\Kikuri Hiroi Desktop Pet\\run\\frames\\playing\\08.png",
+        "C:\\Users\\steve\\Desktop\\Kikuri Hiroi Desktop Pet\\run\\frames\\playing\\09.png",
+        "C:\\Users\\steve\\Desktop\\Kikuri Hiroi Desktop Pet\\run\\frames\\playing\\10.png",
+        "C:\\Users\\steve\\Desktop\\Kikuri Hiroi Desktop Pet\\run\\frames\\playing\\11.png"
+      ]
     }
   }
 }
