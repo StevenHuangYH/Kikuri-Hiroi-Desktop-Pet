@@ -278,13 +278,18 @@ class KikuriDesktopPet:
         self.save_settings()
 
     def toggle_bass_playing(self) -> None:
-        """Toggle continuous bass playing mode with mutual exclusivity against auto-roam."""
+        """Toggle audio-reactive bass playing mode with mutual exclusivity against auto-roam."""
         self.settings.is_bass_playing = not self.settings.is_bass_playing
         t = I18N[self.settings.language]
         if self.settings.is_bass_playing:
             self.settings.is_wandering = False
-            self.set_state('playing')
-            self.show_speech(t['bass_on'], duration_ms=4000)
+            if self.is_audio_playing:
+                self.set_state('playing')
+                msg = t.get('bass_on_playing', "🎸 贝斯演奏模式开启！检测到音乐，SICK HACK 就位！🤘✨")
+            else:
+                self.set_state('idle')
+                msg = t.get('bass_on_waiting', "🎸 贝斯演奏模式已就绪！播放背景音乐时菊里就会开始演奏哦~ 🎶")
+            self.show_speech(msg, duration_ms=4000)
         else:
             if self.current_state == 'playing':
                 self.set_state('idle')
@@ -339,7 +344,7 @@ class KikuriDesktopPet:
             self.anim_timer = self.root.after(200, self.animate_step)
 
     def roam_decision_step(self) -> None:
-        """Autonomous roaming / wander decision engine."""
+        """Autonomous roaming / wander decision engine (never plays bass during roam)."""
         if self.settings.is_wandering and not self.settings.is_bass_playing and not self.is_dragging:
             screen_w = self.root.winfo_screenwidth()
             min_x = 20
@@ -347,17 +352,15 @@ class KikuriDesktopPet:
 
             dist = self.wander_target_x - self.settings.pos_x
 
-            # If near target, pick action or pause
+            # If near target, pick pause action (NO bass playing in roaming)
             if abs(dist) < 15:
-                choice = datetime.datetime.now().microsecond % 12
+                choice = datetime.datetime.now().microsecond % 10
                 if choice < 4:
                     self.set_state('idle')
                 elif choice < 6:
                     self.set_state('waving')
                 elif choice < 8:
                     self.set_state('jumping')
-                elif choice < 10:
-                    self.set_state('playing')
                 else:
                     self.set_state('waiting')
 
@@ -397,12 +400,10 @@ class KikuriDesktopPet:
         now = time.time()
 
         # 1. Background Music / Audio Playback Reaction
-        if self.settings.is_bass_playing:
-            if self.current_state != 'playing' and not self.is_dragging:
-                self.set_state('playing')
-            return
-
-        if self.is_audio_playing:
+        # Bass playing animation is ONLY triggered when BOTH:
+        # 1) is_bass_playing switch is enabled, AND
+        # 2) system audio playback is active.
+        if self.settings.is_bass_playing and self.is_audio_playing:
             self.last_audio_active_time = now
             if not self.is_dragging and self.current_state != 'playing':
                 self.set_state('playing')
@@ -413,12 +414,13 @@ class KikuriDesktopPet:
                     self.show_speech(music_quotes[int(now) % len(music_quotes)], duration_ms=4000)
             return
 
-        # Return to idle after music stops (3.0s grace period)
-        if self.current_state == 'playing' and (now - self.last_audio_active_time > 3.0) and not self.is_dragging:
-            self.set_state('idle')
-            t = I18N[self.settings.language]
-            if len(t['quotes']) > 10:
-                self.show_speech(t['quotes'][10], duration_ms=3500)
+        # Return to idle after music stops (3.0s grace period) or if bass playing mode is disabled
+        if self.current_state == 'playing' and not self.is_dragging:
+            if not self.settings.is_bass_playing or (now - self.last_audio_active_time > 3.0):
+                self.set_state('idle')
+                t = I18N[self.settings.language]
+                if len(t['quotes']) > 10 and self.settings.is_bass_playing:
+                    self.show_speech(t['quotes'][10], duration_ms=3500)
 
         # 2. Hardware High Load Reaction (when not playing music)
         if now - self.last_high_load_state_change > 15 and not self.is_dragging:
