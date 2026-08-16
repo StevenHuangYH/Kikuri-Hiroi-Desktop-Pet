@@ -8,7 +8,7 @@ A lightweight, interactive Windows desktop pet featuring **Kikuri Hiroi (廣井�
 
 - **Windows 11 Fluent Design**: Smooth 8px rounded corners with **Dark Mode** (Dark Mica) and **Light Mode** (Light Acrylic) support.
 - **Compact Performance Monitor**: Real-time **CPU / RAM / GPU** tracker with pixel-perfect tabular numbers, adaptive load colors, and a snug 2px body-proximity fit.
-- **Minimalist Dialogue**: Floating voice quote bubbles (Chinese, English, Japanese) with audio and birthday interactions.
+- **Minimalist Dialogue**: Floating voice quote bubbles (Chinese, English, Japanese).
 - **Audio-Reactive Bass Groove**: Automatically jams on bass when system audio or music playback is detected.
 - **Fluent Context Menu**: Translucent hover pills, cascading submenus, and global click-outside auto-dismissal.
 - **Roaming & Physics**: 8 animated states, autonomous desktop wandering, and left-click drag-and-drop.
